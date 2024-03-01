@@ -1,0 +1,11 @@
+streamlit
+pandas
+numpy
+unidecode
+phonenumbers 
+rapidfuzz
+geopy
+tqdm
+pillow
+openpyxl
+streamlit-option-menu
