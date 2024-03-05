@@ -878,10 +878,14 @@ def round3_motfile(HVN_r3):
 
     if result_df.empty:
         overall85storename100 = result_df
-    else:    
+    else:
         result_df['Score_Overall'] = result_df.apply(calc_overall_score_motfile, axis=1)
         result_df['Score_Name'] = result_df.apply(calc_score_name_motfile, axis=1)
-        overall85storename100 = result_df.loc[(result_df['Score_Overall'] >= 85) & (result_df['Score_Name'] == 100)]
+        
+        # Chỉ giữ lại hàng có Score_Overall cao nhất ứng với mỗi OutletID_1
+        max_score_index = result_df.groupby('OutletID_1')['Score_Overall'].idxmax()
+        overall85storename100 = result_df.loc[max_score_index]
+        overall85storename100 = overall85storename100.loc[(overall85storename100['Score_Overall'] >= 85) & (overall85storename100['Score_Name'] == 100)]
     
     return overall85storename100
 
