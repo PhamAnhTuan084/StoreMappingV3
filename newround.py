@@ -990,6 +990,52 @@ def filter_distance(row):
     elif 'xa' in row['WardName_file1'] and 'thi xa' in row['DistrictName_file1'] and 'city' in row['ProvinceName_file1']:
         return  row['distance'] <= 15
     
+# def round4(HVN_r4, Vigo_r4):
+#     # Tạo danh sách để lưu trữ dòng dữ liệu khớp
+#     result_rows = []
+#     matched_indices = set()  # Danh sách các chỉ số đã được khớp trong Vigo_r4
+
+#     # Matching cho DataFrame thứ nhất (df1)
+#     for index1, row1 in HVN_r4.iterrows():
+#         match_found = False
+#         for index2, row2 in Vigo_r4.iterrows():
+#             if index2 in matched_indices:
+#                 continue  # Bỏ qua dòng đã được khớp trước đó trong Vigo_r4
+#             if (
+#                 row1['ProvinceName'] == row2['ProvinceName'] and
+#                 row1['DistrictName'] == row2['DistrictName'] and
+#                 row1['WardName'] == row2['WardName']
+#             ):
+#                 result_rows.append({
+#                     f"{col}_file1": row1[col] for col in HVN_r4.columns
+#                 })
+#                 result_rows[-1].update({
+#                     f"{col}_file2": row2[col] for col in Vigo_r4.columns
+#                 })
+#                 match_found = True
+#                 matched_indices.add(index2)  # Đánh dấu dòng trong Vigo_r4 đã được khớp
+#                 break
+
+#         if not match_found:
+#             # Nếu không tìm thấy match, bạn có thể xử lý theo ý của mình
+#             pass
+
+#     # Tạo DataFrame kết quả từ danh sách
+#     merged_df = pd.DataFrame(result_rows)
+
+#     if merged_df.empty:
+#         name80address80 = merged_df
+#     else:   
+#         merged_df['distance'] = merged_df.apply(lambda row: calculate_distance((row['Latitude_file1'], row['Longitude_file1']),
+#                                                                     (row['Latitude_file2'], row['Longitude_file2'])), axis=1)
+#         filtered_result = merged_df.apply(filter_distance, axis=1)
+#         filtered_result = merged_df[filtered_result]
+#         filtered_result['Score_Name_2'] = filtered_result.apply(calc_score_name_2, axis=1)
+#         filtered_result['Score_Address'] = filtered_result.apply(calc_score_address, axis=1)
+#         name80address80 = filtered_result.loc[(filtered_result['Score_Name_2'] >= 80) & (filtered_result['Score_Address'] >= 80)]
+
+#     return name80address80
+
 def round4(HVN_r4, Vigo_r4):
     # Tạo danh sách để lưu trữ dòng dữ liệu khớp
     result_rows = []
@@ -1032,7 +1078,13 @@ def round4(HVN_r4, Vigo_r4):
         filtered_result = merged_df[filtered_result]
         filtered_result['Score_Name_2'] = filtered_result.apply(calc_score_name_2, axis=1)
         filtered_result['Score_Address'] = filtered_result.apply(calc_score_address, axis=1)
-        name80address80 = filtered_result.loc[(filtered_result['Score_Name_2'] >= 80) & (filtered_result['Score_Address'] >= 80)]
+        
+        # Chỉ giữ lại hàng có Score_Name_2 và Score_Address cao nhất ứng với mỗi OutletID_file1
+        best_scores = filtered_result.groupby('OutletID_file1').apply(lambda group: group.loc[(group['Score_Name_2'] == group['Score_Name_2'].max()) & (group['Score_Address'] == group['Score_Address'].max())])
+        # Reset index để có DataFrame gốc
+        best_scores = best_scores.reset_index(drop=True)
+        
+        name80address80 = best_scores.loc[(best_scores['Score_Name_2'] >= 80) & (best_scores['Score_Address'] >= 80)]
 
     return name80address80
 
